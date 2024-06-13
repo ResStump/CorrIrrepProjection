@@ -1,9 +1,18 @@
 #= @doc raw"""
     doc ...
 """ =#
-function DD_local_T₁⁺(raw_corr_file, isospin::Int)
+function DD_local_T₁⁺(raw_corr_file, spin_idx::Int, isospin::Int)
     # Define Operators
     ##################
+    if spin_idx == 1
+        γᵢ = :γ₁
+    elseif spin_idx == 2
+        γᵢ = :γ₂
+    elseif spin_idx == 3
+        γᵢ = :γ₃
+    else
+        throw(ArgumentError("spin_idx has to be 1, 2, or 3."))
+    end
 
     # Momentum
     p = [0, 0, 0]
@@ -14,8 +23,8 @@ function DD_local_T₁⁺(raw_corr_file, isospin::Int)
 
     # Sink operator
     O_sink = [
-        Dict("factor"=>1/√2, :Γ₁=>:γ₅, :Γ₂=>:γ₁),
-        Dict("factor"=>1/√2, :Γ₁=>:γ₁, :Γ₂=>:γ₅)
+        Dict("factor"=>1/√2, :Γ₁=>:γ₅, :Γ₂=>γᵢ),
+        Dict("factor"=>1/√2, :Γ₁=>γᵢ, :Γ₂=>:γ₅)
     ]
     
     # Isospin
