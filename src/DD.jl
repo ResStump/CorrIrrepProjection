@@ -67,11 +67,14 @@ function main()
                 raw_correlator_file = CIP.parms.raw_correlator_dir/
                     "$(CIP.parms_toml["File base name"]["name"])_n$(n_cnfg)_tsrc$(t₀).hdf5"
                 
-                correlator_I0[:, i_src, i_cnfg] =
-                    CIP.DD_local_T₁⁺(raw_correlator_file, 0)
+                correlator_I0[:, i_src, i_cnfg] = 
+                    1/3*(CIP.DD_local_T₁⁺(raw_correlator_file, 1, 0) +
+                         CIP.DD_local_T₁⁺(raw_correlator_file, 2, 0) +
+                         CIP.DD_local_T₁⁺(raw_correlator_file, 3, 0))
                 correlator_I1[:, i_src, i_cnfg] =
-                    CIP.DD_local_T₁⁺(raw_correlator_file, 1)
-
+                    1/3*(CIP.DD_local_T₁⁺(raw_correlator_file, 1, 1) +
+                         CIP.DD_local_T₁⁺(raw_correlator_file, 2, 1) +
+                         CIP.DD_local_T₁⁺(raw_correlator_file, 3, 1))
 
                 end
 
@@ -90,9 +93,9 @@ function main()
             "$(CIP.parms_toml["File base name"]["name"]).hdf5"
 
         CIP.write_correlator(proj_correlator_file, correlator_I0,
-                             "c2_DD_local/I0/P000/T1+")
+                             "c2_DD_local/I0/P000/T1+", "w")
         CIP.write_correlator(proj_correlator_file, correlator_I1,
-                             "c2_DD_local/I1/P000/T1+")
+                             "c2_DD_local/I1/P000/T1+", "r+")
     end
 
 end
