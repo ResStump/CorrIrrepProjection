@@ -10,6 +10,6 @@ import FilePathsBase: /, Path
 
 include("functions/IO.jl")
 include("functions/mpi_utils.jl")
-include("functions/projections_DD.jl")
+include("functions/projection.jl")
 
 end # module CorrIrrepProjection
