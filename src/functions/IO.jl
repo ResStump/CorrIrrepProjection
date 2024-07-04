@@ -7,10 +7,6 @@ struct Parms
     # String containt in parameter toml file passed to program
     parms_toml_string::String
 
-    # Paths
-    raw_correlator_dir
-    result_dir
-
     # Configuration numbers and source times
     cnfg_indices::Vector{Int}
     tsrc_arr::Array{Int, 2}
@@ -57,10 +53,6 @@ function read_parameters()
     tsrc_list = DF.readdlm(
         parms_toml["Directories and Files"]["tsrc_list"], ' ', Int
     )
-    
-    # Set paths
-    raw_correlator_dir = Path(parms_toml["Directories and Files"]["raw_correlator_dir"])
-    result_dir = Path(parms_toml["Directories and Files"]["result_dir"])
 
     # Lattice size in time
     Nₜ = parms_toml["Geometry"]["N_t"]
@@ -87,28 +79,30 @@ function read_parameters()
     tsrc_arr = mod.(tsrc_arr, Nₜ) # periodically shift values >= Nₜ
 
     # Store all parameters
-    global parms = Parms(parms_toml_string, raw_correlator_dir, result_dir, cnfg_indices,
+    global parms = Parms(parms_toml_string, cnfg_indices,
                          tsrc_arr, Nₜ, N_cnfg, N_src)
     
     return
 end
 
 @doc raw"""
-    write_correlator(correlator_file, correlator, dataset, mode="w")
+    write_corr_matrix(correlator_file, corr_matrix, group, operator_labels, dimension_labels, mode="w")
 
-Write `correlator` and its dimension labels to the dataset `dataset` in the HDF5 file
-`correlator_file`. Additionally, also write the parameter file `parms_toml_string` and
-program information to it.
+Write `corr_matrix` and its labels `operator_labels` and `dimension_labels` to the group
+`group` in the HDF5 file `correlator_file`. Additionally, also write the parameter file
+`parms_toml_string` and program information to it.
 
 Adittionally specify the mode as "w" (default), "r+" or "cw". With mode "r+" or "cw" the
 parameter file and program information is not changed.
 """
-function write_correlator(correlator_file, correlator, dataset, mode="w")
+function write_corr_matrix(correlator_file, corr_matrix, group, operator_labels,
+                           dimension_labels, mode="w")
     hdf5_file = HDF5.h5open(string(correlator_file), mode)
 
     # Write correlator with dimension labels
-    hdf5_file[dataset] = correlator
-    HDF5.attributes(hdf5_file[dataset])["DIMENSION_LABELS"] = ["t", "source", "cnfg"]
+    hdf5_file[group] = corr_matrix
+    HDF5.attrs(hdf5_file[group])["operators"] = operator_labels
+    HDF5.attrs(hdf5_file[group])["DIMENSION_LABELS"] = dimension_labels
 
     # Write parameter file (if not already done)
     if !haskey(hdf5_file, "parms.toml")
