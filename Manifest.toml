@@ -21,9 +21,9 @@ uuid = "6e4b80f9-dd63-53aa-95a3-0cdb28fa8baf"
 version = "1.5.0"
 
 [[deps.BitFlags]]
-git-tree-sha1 = "2dc09997850d68179b69dafb58ae806167a32b1b"
+git-tree-sha1 = "0691e34b3bb8be9307330f88d1a3c3f25466c24d"
 uuid = "d1d4a3ce-64b1-5f1a-9ba4-7e7e69966f35"
-version = "0.1.8"
+version = "0.1.9"
 
 [[deps.Bzip2_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl", "Pkg"]
@@ -211,15 +211,15 @@ version = "3.3.9+0"
 
 [[deps.GR]]
 deps = ["Artifacts", "Base64", "DelimitedFiles", "Downloads", "GR_jll", "HTTP", "JSON", "Libdl", "LinearAlgebra", "Preferences", "Printf", "Random", "Serialization", "Sockets", "TOML", "Tar", "Test", "p7zip_jll"]
-git-tree-sha1 = "ddda044ca260ee324c5fc07edb6d7cf3f0b9c350"
+git-tree-sha1 = "3e527447a45901ea392fe12120783ad6ec222803"
 uuid = "28b8d3ca-fb5f-59d9-8090-bfdbd6d07a71"
-version = "0.73.5"
+version = "0.73.6"
 
 [[deps.GR_jll]]
 deps = ["Artifacts", "Bzip2_jll", "Cairo_jll", "FFMPEG_jll", "Fontconfig_jll", "FreeType2_jll", "GLFW_jll", "JLLWrappers", "JpegTurbo_jll", "Libdl", "Libtiff_jll", "Pixman_jll", "Qt6Base_jll", "Zlib_jll", "libpng_jll"]
-git-tree-sha1 = "278e5e0f820178e8a26df3184fcb2280717c79b1"
+git-tree-sha1 = "182c478a179b267dd7a741b6f8f4c3e0803795d6"
 uuid = "d2c73de3-f751-5644-a686-071e5b155ba9"
-version = "0.73.5+0"
+version = "0.73.6+0"
 
 [[deps.Gettext_jll]]
 deps = ["Artifacts", "CompilerSupportLibraries_jll", "JLLWrappers", "Libdl", "Libiconv_jll", "Pkg", "XML2_jll"]
@@ -474,9 +474,9 @@ version = "1.0.3"
 
 [[deps.MKL]]
 deps = ["Artifacts", "Libdl", "LinearAlgebra", "Logging", "MKL_jll"]
-git-tree-sha1 = "17f06b6fb5198b757413d8379bfa62246c5da5a3"
+git-tree-sha1 = "18b02c359c1150bf182978e18dbd9ce7ccc860af"
 uuid = "33e6dc65-8f57-5167-99aa-e5a354878fb2"
-version = "0.6.3"
+version = "0.7.0"
 
 [[deps.MKL_jll]]
 deps = ["Artifacts", "IntelOpenMP_jll", "JLLWrappers", "LazyArtifacts", "Libdl", "oneTBB_jll"]
@@ -486,9 +486,9 @@ version = "2024.1.0+0"
 
 [[deps.MPI]]
 deps = ["Distributed", "DocStringExtensions", "Libdl", "MPICH_jll", "MPIPreferences", "MPItrampoline_jll", "MicrosoftMPI_jll", "OpenMPI_jll", "PkgVersion", "PrecompileTools", "Requires", "Serialization", "Sockets"]
-git-tree-sha1 = "4e3136db3735924f96632a5b40a5979f1f53fa07"
+git-tree-sha1 = "14cef41baf5b675b192b02a22c710f725ab333a7"
 uuid = "da04e1cc-30fd-572f-bb4f-1f8673147195"
-version = "0.20.19"
+version = "0.20.20"
 
     [deps.MPI.extensions]
     AMDGPUExt = "AMDGPU"
@@ -601,9 +601,9 @@ version = "1.4.3"
 
 [[deps.OpenSSL_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl"]
-git-tree-sha1 = "3da7367955dcc5c54c1ba4d402ccdc09a1a3e046"
+git-tree-sha1 = "a028ee3cb5641cccc4c24e90c36b0a4f7707bdf5"
 uuid = "458c3c95-2e84-50aa-8efc-19380b2a3a95"
-version = "3.0.13+1"
+version = "3.0.14+0"
 
 [[deps.Opus_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl", "Pkg"]
@@ -709,9 +709,9 @@ uuid = "9abbd945-dff8-562f-b5e8-e1ebf5ef1b79"
 
 [[deps.Qt6Base_jll]]
 deps = ["Artifacts", "CompilerSupportLibraries_jll", "Fontconfig_jll", "Glib_jll", "JLLWrappers", "Libdl", "Libglvnd_jll", "OpenSSL_jll", "Vulkan_Loader_jll", "Xorg_libSM_jll", "Xorg_libXext_jll", "Xorg_libXrender_jll", "Xorg_libxcb_jll", "Xorg_xcb_util_cursor_jll", "Xorg_xcb_util_image_jll", "Xorg_xcb_util_keysyms_jll", "Xorg_xcb_util_renderutil_jll", "Xorg_xcb_util_wm_jll", "Zlib_jll", "libinput_jll", "xkbcommon_jll"]
-git-tree-sha1 = "37b7bb7aabf9a085e0044307e1717436117f2b3b"
+git-tree-sha1 = "492601870742dcd38f233b23c3ec629628c1d724"
 uuid = "c0090381-4147-56d7-9ebc-da0b1113ec56"
-version = "6.5.3+1"
+version = "6.7.1+1"
 
 [[deps.REPL]]
 deps = ["InteractiveUtils", "Markdown", "Sockets", "Unicode"]
@@ -806,9 +806,9 @@ version = "0.34.3"
 
 [[deps.Strided]]
 deps = ["LinearAlgebra", "StridedViews", "TupleTools"]
-git-tree-sha1 = "40c69be0e1b72ee2f42923b7d1ff13e0b04e675c"
+git-tree-sha1 = "bd9bd1c70cfc115cc3a30213fc725125a6b43652"
 uuid = "5e0ebb24-38b0-5f93-81fe-25c709ecae67"
-version = "2.0.4"
+version = "2.1.0"
 
 [[deps.StridedViews]]
 deps = ["LinearAlgebra", "PackageExtensionCompat"]
@@ -863,9 +863,9 @@ deps = ["InteractiveUtils", "Logging", "Random", "Serialization"]
 uuid = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 
 [[deps.TranscodingStreams]]
-git-tree-sha1 = "a947ea21087caba0a798c5e494d0bb78e3a1a3a0"
+git-tree-sha1 = "d73336d81cafdc277ff45558bb7eaa2b04a8e472"
 uuid = "3bb67fe8-82b1-5028-8e26-92a6c54297fa"
-version = "0.10.9"
+version = "0.10.10"
 weakdeps = ["Random", "Test"]
 
     [deps.TranscodingStreams.extensions]
@@ -921,9 +921,9 @@ version = "0.2.0"
 
 [[deps.VectorInterface]]
 deps = ["LinearAlgebra"]
-git-tree-sha1 = "833b06acd39f0abc97bc1170bd28e4f713619b37"
+git-tree-sha1 = "7aff7d62bffad9bba9928eb6ab55226b32a351eb"
 uuid = "409d34a3-91d5-4945-b6ec-7529ddf182d8"
-version = "0.4.5"
+version = "0.4.6"
 
 [[deps.Vulkan_Loader_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl", "Wayland_jll", "Xorg_libX11_jll", "Xorg_libXrandr_jll", "xkbcommon_jll"]
@@ -1041,9 +1041,9 @@ version = "0.1.1+0"
 
 [[deps.Xorg_libxcb_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl", "XSLT_jll", "Xorg_libXau_jll", "Xorg_libXdmcp_jll", "Xorg_libpthread_stubs_jll"]
-git-tree-sha1 = "b4bfde5d5b652e22b9c790ad00af08b6d042b97d"
+git-tree-sha1 = "bcd466676fef0878338c61e655629fa7bbc69d8e"
 uuid = "c7cfdc94-dc32-55de-ac96-5a1b8d977c5b"
-version = "1.15.0+0"
+version = "1.17.0+0"
 
 [[deps.Xorg_libxkbfile_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl", "Xorg_libX11_jll"]
