@@ -22,7 +22,7 @@ Broadcast `correlator` to all ranks by assuming that each rank computed that par
 `correlator` for which `is_my_cnfg(i_cnfg) == true`. The integer `cnfg_dim` specifies which
 dimension in `correlator` is the configuration index (default is 3).
 """
-function broadcast_correlators!(correlator, cnfg_dim=3)
+function broadcast_correlators!(correlator; cnfg_dim=3)
     # Check size of correlator
     N_cnfg = size(correlator)[cnfg_dim]
     if N_cnfg != parms.N_cnfg
