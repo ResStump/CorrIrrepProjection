@@ -1,10 +1,10 @@
 # %%########################################################################################
-# DD_projections.jl
+# DD.jl
 #
 # Project DD correlators to irreps.
 #
 # Usage:
-#   DD_projections.jl -i <parms file>
+#   DD.jl -i <parms file>
 #
 # where <parms file> is a toml file containing the required parameters
 #
@@ -31,25 +31,126 @@ end
 
 
 # %%###############
-# Global Carameters
+# Global Parameters
 ###################
 
 # Set global parameters
 CIP.read_parameters()
 
+# Gamma matrix symbols
+γ = Dict(1=>:γ₁, 2=>:γ₂, 3=>:γ₃, 5=>:γ₅)
 
-#%% #######################
-# Allocate Correlator Array
-###########################
+# Indices of the monomials of gamma matrices
+Γ_indices = Dict(:γ₅=>1, :γ₁=>2, :γ₂=>3, :γ₃=>4, :mi=>5)
 
-correlator_size = CIP.parms.Nₜ, CIP.parms.N_src, CIP.parms.N_cnfg
-correlator_I0 = Array{ComplexF64}(undef, correlator_size)
-correlator_I1 = Array{ComplexF64}(undef, correlator_size)
+
+# %%#######
+# Operators
+###########
+
+include("operators/DD_operators.jl")
+
+# Operator array
+O_arr(i) = [DDstarₛᵢ_A₁⁺0_T₁⁺_I0_nonlocal(i),
+            DDstarₛᵢ_A₁⁺1_T₁⁺_I0_nonlocal(i),
+            DDstarₛᵢ_A₁⁺p0_T₁⁺_I0_local(i)]
+
+N_op = length(O_arr(1))
+
+# Operator labels
+operator_labels = ["DD*s nonlocal A1+(0)", "DD*s nonlocal A1+(1)", "DD*s local A1+(0)"]
+
+
+# Skipped correlator matrix entries
+skipped_entries = CIP.parms_toml["Corr Matrix Entries"]["skip_entries"]
+
+# Correlator matrix entries from external file (if they are already computed)
+ext_corr_file = CIP.parms_toml["Corr Matrix Entries"]["external corr"]["file"]
+ext_corr_group = CIP.parms_toml["Corr Matrix Entries"]["external corr"]["group"]
+ext_corr_entries = CIP.parms_toml["Corr Matrix Entries"]["external corr"]["entries"]
+
+
+
+# %%###############################
+# Paths and Functions to Read Files
+###################################
+
+# Path to result directory
+result_dir = Path(CIP.parms_toml["Directories and Files"]["result_dir"])
+
+
+function read_raw_corr_DD_local(n_cnfg, t₀)
+    base_name = CIP.parms_toml["File base names"]["DD_local"]
+    dir = Path(CIP.parms_toml["Directories and Files"]["raw_corr_DD_local_dir"])
+    file_path = dir/"$(base_name)_n$(n_cnfg)_tsrc$(t₀).hdf5"
+
+    return HDF5.h5read(string(file_path), "Correlators")
+end
+
+function read_raw_corr_DD_nonlocal(n_cnfg, t₀)
+    base_name = CIP.parms_toml["File base names"]["DD_nonlocal"]
+    dir = Path(CIP.parms_toml["Directories and Files"]["raw_corr_DD_nonlocal_dir"])
+    file_path = dir/"$(base_name)_n$(n_cnfg)_tsrc$(t₀).hdf5"
+
+    return HDF5.h5read(string(file_path), "Correlators")
+end
+
+function read_raw_corr_DD_mixed(n_cnfg, t₀)
+    base_name = CIP.parms_toml["File base names"]["DD_mixed"]
+    dir = Path(CIP.parms_toml["Directories and Files"]["raw_corr_DD_mixed_dir"])
+    file_path = dir/"$(base_name)_n$(n_cnfg)_tsrc$(t₀).hdf5"
+
+    return HDF5.h5read(string(file_path), "Correlators")
+end
+
+function get_raw_corr_dict(n_cnfg, t₀)
+    raw_corr_dict = Dict()
+
+    raw_corr_dict["DD_local"] = read_raw_corr_DD_local(n_cnfg, t₀)
+    raw_corr_dict["DD_nonlocal"] = read_raw_corr_DD_nonlocal(n_cnfg, t₀)
+    raw_corr_dict["DD_mixed"] = read_raw_corr_DD_mixed(n_cnfg, t₀)
+
+    return raw_corr_dict
+end
+
+
+#%% ########################
+# Allocate Correlator Arrays
+############################
+
+corr_matrix_size = CIP.parms.Nₜ÷2+1, N_op, N_op, 2, CIP.parms.N_src, CIP.parms.N_cnfg
+corr_matrix = Array{ComplexF64}(undef, corr_matrix_size)
+
+# Dimension labels (reversed order in julia)
+dimension_labels = ["config", "tsrc", "fwd/bwd", "op_src", "op_snk", "t"]
 
 
 # %%#########
 # Calculation
 #############
+
+function compute_corr_matrix_entries!(raw_corr_dict)
+    # Allocate corr matrix with zeros
+    Cₜ = zeros(ComplexF64, CIP.parms.Nₜ, N_op, N_op)
+
+    # Loop over spin index
+    for i in 1:3
+        # Loop over all operators
+        for (i_O_sink, O_sink) in enumerate(O_arr(i))
+        for (i_O_src, O_src) in enumerate(O_arr(i))
+            # Check if this entrie should be computed
+            if [i_O_sink, i_O_src] in skipped_entries
+                continue
+            end
+
+            Cₜ[:, i_O_sink, i_O_src] .+= 
+                1/3*CIP.project_tetraquark_corr(O_sink, O_src, raw_corr_dict, Γ_indices)
+        end
+        end
+    end
+    
+    return Cₜ
+end
 
 function main()
     # Loop over all configurations
@@ -64,43 +165,69 @@ function main()
             # Loop over all sources
             for (i_src, t₀) in enumerate(CIP.parms.tsrc_arr[i_cnfg, :])
                 # println("  Source: $i_src of $(CIP.parms.N_src)")
-                raw_correlator_file = CIP.parms.raw_correlator_dir/
-                    "$(CIP.parms_toml["File base name"]["name"])_n$(n_cnfg)_tsrc$(t₀).hdf5"
-                
-                correlator_I0[:, i_src, i_cnfg] = 
-                    1/3*(CIP.DD_local_T₁⁺(raw_correlator_file, 1, 0) +
-                         CIP.DD_local_T₁⁺(raw_correlator_file, 2, 0) +
-                         CIP.DD_local_T₁⁺(raw_correlator_file, 3, 0))
-                correlator_I1[:, i_src, i_cnfg] =
-                    1/3*(CIP.DD_local_T₁⁺(raw_correlator_file, 1, 1) +
-                         CIP.DD_local_T₁⁺(raw_correlator_file, 2, 1) +
-                         CIP.DD_local_T₁⁺(raw_correlator_file, 3, 1))
 
-                end
+                # Compute correlator matrix
+                raw_corr_dict = get_raw_corr_dict(n_cnfg, t₀)
+                Cₜ = compute_corr_matrix_entries!(raw_corr_dict) 
 
+                # Bring operator in forward/backward shape and store it
+                #######################################################
+                Nₜ = CIP.parms.Nₜ
+
+                # Forward correlator
+                Cₜ_fwd = Cₜ[1:Nₜ÷2+1, :, :]
+                corr_matrix[:, :, :, 1, i_src, i_cnfg] = Cₜ_fwd
+
+                # Backward correlator (reversed time order and operator indices permuted)
+                bwd_time_indices = [1, (Nₜ:-1:Nₜ÷2+1)...]
+                Cₜ_bwd = Cₜ[bwd_time_indices, :, :]
+                corr_matrix[:, :, :, 2, i_src, i_cnfg] = permutedims(Cₜ_bwd, [1, 3, 2])
+            end
         end
         println("\n")
     end
 
     # Broadcast correlators to all ranks
     @time "Broadcast correlators" begin
-        CIP.broadcast_correlators!(correlator_I0)
-        CIP.broadcast_correlators!(correlator_I1)
+        CIP.broadcast_correlators!(corr_matrix, cnfg_dim=6)
     end
 
+    # Finalize and write correlator
     if myrank == 0
-        proj_correlator_file = CIP.parms.result_dir/
-            "$(CIP.parms_toml["File base name"]["name"]).hdf5"
+        # Take entries from external file
+        if length(skipped_entries) != 0
+            if length(skipped_entries) != length(ext_corr_entries)
+                throw(ArgumentError("There must be as many entries that are skipped as " *
+                                    "entries that are taken from the external file."))
+            end
 
-        CIP.write_correlator(proj_correlator_file, correlator_I0,
-                             "c2_DD_local/I0/P000/T1+", "w")
-        CIP.write_correlator(proj_correlator_file, correlator_I1,
-                             "c2_DD_local/I1/P000/T1+", "r+")
+            # Read external correlator
+            ext_corr = HDF5.h5read(ext_corr_file, ext_corr_group)
+
+            for ((i_O_sink, i_O_src), (i_O_sink_ext, i_O_src_ext)) in 
+                zip(skipped_entries, ext_corr_entries)
+
+                # Store external correlator entries in correlator
+                # (assume all sorces are used)
+                corr_matrix[:, i_O_sink, i_O_src, :, :, :] = 
+                    ext_corr[:, i_O_sink_ext, i_O_src_ext, :, :, CIP.parms.cnfg_indices]
+            end
+        end
+
+        # Write correlator
+        correlator_file = result_dir/CIP.parms_toml["File base names"]["corr_result"]
+        group = "c2_DD/I0/P000/T1+"
+        CIP.write_corr_matrix(correlator_file, corr_matrix, group, operator_labels,
+                              dimension_labels, "w")
     end
 
 end
 
 main()
+
+
+# %%
+
 
 
 # %%
