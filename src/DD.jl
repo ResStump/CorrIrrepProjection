@@ -107,7 +107,7 @@ function get_raw_corr_dict(n_cnfg, t₀)
     raw_corr_dict = Dict()
 
     raw_corr_dict["DD_local"] = read_raw_corr_DD_local(n_cnfg, t₀)
-    raw_corr_dict["DD_nonlocal"] = read_raw_corr_DD_nonlocal(n_cnfg, t₀)
+    # raw_corr_dict["DD_nonlocal"] = read_raw_corr_DD_nonlocal(n_cnfg, t₀)
     raw_corr_dict["DD_mixed"] = read_raw_corr_DD_mixed(n_cnfg, t₀)
 
     return raw_corr_dict
@@ -139,12 +139,10 @@ function compute_corr_matrix_entries!(raw_corr_dict)
         for (i_O_sink, O_sink) in enumerate(O_arr(i))
         for (i_O_src, O_src) in enumerate(O_arr(i))
             # Check if this entrie should be computed
-            if [i_O_sink, i_O_src] in skipped_entries
-                continue
+            if !([i_O_sink, i_O_src] in skipped_entries)
+                Cₜ[:, i_O_sink, i_O_src] .+= 
+                    1/3*CIP.project_tetraquark_corr(O_sink, O_src, raw_corr_dict, Γ_indices)
             end
-
-            Cₜ[:, i_O_sink, i_O_src] .+= 
-                1/3*CIP.project_tetraquark_corr(O_sink, O_src, raw_corr_dict, Γ_indices)
         end
         end
     end
