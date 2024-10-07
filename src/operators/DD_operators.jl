@@ -1,13 +1,4 @@
-# %%##############
-# Helper Functions
-##################
-
-function scalar_mul(O_arr, λ)
-    O_arr_new = copy(O_arr)
-    map(O -> O["N"] *= λ, O_arr_new)
-    return O_arr_new
-end
-
+γ = CIP.γ
 
 # %%################
 # Nonlocal Operators
@@ -84,7 +75,7 @@ DDstarₛᵢ_A₁⁺1_T₁⁺_I0_nonlocal(i) = begin
             append!(O, DDstarₛᵢ_I0_nonlocal(i, p, -p))
         end
     end
-    O = scalar_mul(O, 1/√6)
+    O = CIP.scalar_mul(O, 1/√6)
     return O
 end
 
@@ -112,5 +103,5 @@ DDstarₛᵢ_I1_local(i, p) = [
 # Angular momentum: A₁⁺, p²=0; spin: T₁⁺; I=0
 DDstarₛᵢ_A₁⁺p0_T₁⁺_I0_local(i) = DDstarₛᵢ_I0_local(i, [0, 0, 0])
 
-# Angular momentum: A₁⁺, p²=0; spin: T₁⁺; I=0
+# Angular momentum: A₁⁺, p²=0; spin: T₁⁺; I=1
 DDstarₛᵢ_A₁⁺p0_T₁⁺_I1_local(i) = DDstarₛᵢ_I1_local(i, [0, 0, 0])
