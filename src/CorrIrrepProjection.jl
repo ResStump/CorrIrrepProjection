@@ -9,6 +9,7 @@ import DelimitedFiles as DF
 import FilePathsBase: /, Path
 
 include("functions/IO.jl")
+include("functions/utils.jl")
 include("functions/mpi_utils.jl")
 include("functions/projection.jl")
 
