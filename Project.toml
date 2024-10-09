@@ -1,10 +1,11 @@
 name = "CorrIrrepProjection"
 uuid = "9d0a36aa-c13c-472b-903a-b20a2f40063e"
 authors = ["Andres Stump <andres.stump@hu-berlin.de>"]
-version = "1.1.0"
+version = "1.1.1"
 
 [deps]
 BenchmarkTools = "6e4b80f9-dd63-53aa-95a3-0cdb28fa8baf"
+Dates = "ade2ca70-3891-5945-98fb-dc099432e06a"
 DelimitedFiles = "8bb1440f-4735-579b-a4ab-409b98df4dab"
 FilePathsBase = "48062228-2e41-5def-b9a4-89aafe57970f"
 HDF5 = "f67ccb44-e63f-5c2f-98bd-6dc0ccc4ba2f"
