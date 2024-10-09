@@ -208,7 +208,7 @@ function main()
 
         # Write correlator
         correlator_file = result_dir/CIP.parms_toml["File base names"]["corr_result"]
-        group = "c2_DD/I0/P000/T1+"
+        group = "c2_dad-DD/I0/P000/T1+"
         CIP.write_corr_matrix(correlator_file, corr_matrix, group, operator_labels,
                               dimension_labels, "w")
     end
