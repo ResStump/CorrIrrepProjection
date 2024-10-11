@@ -16,22 +16,24 @@ function get_DD_nonlocal_corr(O_sink, O_src, raw_corr_dict)
     # Check if p₁ or p₂ is psink1 in raw correlator
     swap_ud = false
     psink1_str_arr = keys(raw_correlators[Ptot_str])
-    if "psink1_"*join(p₁, ",") in psink1_str_arr
-        psink1_str = "psink1_"*join(p₁, ",")
-    else
-        psink1_str = "psink1_"*join(p₂, ",")
+    if (p_str = "psink1_"*join(p₁, ",")) in psink1_str_arr
+        psink1_str = p_str
+    elseif (p_str = "psink1_"*join(p₂, ",")) in psink1_str_arr
+        psink1_str = p_str
         
         # In that case also swap Γ₁<->Γ₂ (and possibly u<->d at source)
         permute!(Γ_idx_permutation, [2, 1, 3, 4])
         swap_ud = !swap_ud
+    else
+        throw(ArgumentError("none of the momenta p₁ and p₂ is in the correlator."))
     end
 
     # Check if p₃ or p₄ is psrc1 in raw correlator
     psrc1_str_arr = keys(raw_correlators[Ptot_str][psink1_str])
-    if "psrc1_"*join(p₃, ",") in psrc1_str_arr
-        psrc1_str = "psrc1_"*join(p₃, ",")
-    elseif  "psrc1_"*join(p₄, ",") in psrc1_str_arr
-        psrc1_str = "psrc1_"*join(p₄, ",")
+    if (p_str = "psrc1_"*join(p₃, ",")) in psrc1_str_arr
+        psrc1_str = p_str
+    elseif  (p_str = "psrc1_"*join(p₄, ",")) in psrc1_str_arr
+        psrc1_str = p_str
         
         # In that case also swap Γ₃<->Γ₄ (and possibly u<->d at source)
         permute!(Γ_idx_permutation, [1, 2, 4, 3])
@@ -130,7 +132,7 @@ function get_DD_mixed_corr(O_sink, O_src, raw_corr_dict)
 
         # Flavour
         if (O_sink["flavour"] != O_src["flavour"])
-            # Swap Γ₃<->Γ₄ (swap u<->d in the local operator)
+            # Swap Γ₁<->Γ₂ (swap u<->d in the local operator)
             permute!(Γ_idx_permutation, [2, 1, 3, 4])
         end
     end
@@ -141,10 +143,10 @@ function get_DD_mixed_corr(O_sink, O_src, raw_corr_dict)
 
     # Check if p₁ or p₂ is p_nonlocal1 in raw correlator
     p_nonlocal_str_arr = keys(raw_correlators[Ptot_str])
-    if (p₁_str = "p_nonlocal1_"*join(p₁, ",")) in p_nonlocal_str_arr
-        p_nonlocal1_str = p₁_str
-    elseif (p₂_str = "p_nonlocal1_"*join(p₂, ",")) in p_nonlocal_str_arr
-        p_nonlocal1_str = p₂_str
+    if (p_str = "p_nonlocal1_"*join(p₁, ",")) in p_nonlocal_str_arr
+        p_nonlocal1_str = p_str
+    elseif (p_str = "p_nonlocal1_"*join(p₂, ",")) in p_nonlocal_str_arr
+        p_nonlocal1_str = p_str
         
         # In that case also swap Γ₁<->Γ₂ and Γ₃<->Γ₄
         permute!(Γ_idx_permutation, [2, 1, 4, 3])
@@ -167,6 +169,8 @@ function get_DD_mixed_corr(O_sink, O_src, raw_corr_dict)
 end
 
 function get_dad_local_corr(O_sink, O_src, raw_corr_dict)
+    sign = 1
+
     raw_correlators = raw_corr_dict["dad_local"]["Correlators"]
     Γ_labels = raw_corr_dict["dad_local"]["Spin Structure"]
 
@@ -178,6 +182,9 @@ function get_dad_local_corr(O_sink, O_src, raw_corr_dict)
     # Flavour
     @assert O_sink["flavour"] in [:ccūd̄, :ccd̄ū] "Flavour of sink operator not valid."
     @assert O_src["flavour"] in [:ccūd̄, :ccd̄ū] "Flavour of source operator not valid."
+    if (O_sink["flavour"] == :ccd̄ū) ⊻ (O_src["flavour"] == :ccd̄ū)
+        sign *= -1
+    end
 
     # Indices for gamma matrices
     @assert O_sink["Γ₁"] == O_src["Γ₁"] "Diquark-antidiquark correlators with different " *
@@ -189,8 +196,8 @@ function get_dad_local_corr(O_sink, O_src, raw_corr_dict)
         Γ_str_to_idx(O_sink["Γ₂"], Γ_labels["Gamma_dad_2"])
     ]
     
-    # Extract relevant part from raw correlators
-    return raw_correlators[p_str][:, Γ_idx...]
+    # Extract relevant part from raw correlators (and multiply with sign)
+    return sign * raw_correlators[p_str][:, Γ_idx...]
 end
 
 function get_dad_DD_local_mixed_corr(O_sink, O_src, raw_corr_dict)
@@ -254,12 +261,13 @@ function get_dad_DD_local_mixed_corr(O_sink, O_src, raw_corr_dict)
     
     permute!(Γ_idx, Γ_idx_permutation)
 
-    # Extract relevant part from raw correlators
+    # Extract relevant part from raw correlators (and multiply with sign)
     return sign * raw_correlators[p_str][op_order][:, Γ_idx...]
 end
 
 function get_dad_DD_local_nonlocal_mixed_corr(O_sink, O_src, raw_corr_dict)
     Γ_idx_permutation = [1, 2, 3, 4]
+    sign = 1
 
     raw_correlators = raw_corr_dict["dad-DD_local-nonlocal"]["Correlators"]
     Γ_labels = raw_corr_dict["dad-DD_local-nonlocal"]["Spin Structure"]
@@ -271,19 +279,20 @@ function get_dad_DD_local_nonlocal_mixed_corr(O_sink, O_src, raw_corr_dict)
 
         # Get momenta
         Ptot = O_sink["p"]
-        p₁, p₂ = O_src["p"]
-        @assert Ptot == p₁ + p₂ "Total momenta don't match."
+        p₃, p₄ = O_src["p"]
+        @assert Ptot == p₃ + p₄ "Total momenta don't match."
         Ptot_str = "Ptot"*join(Ptot, ",")
 
-        # Check if p₁ or p₂ is p_nonlocal1 in raw correlator
+        # Check if p₃ or p₄ is p_nonlocal1 in raw correlator
         p_nonlocal_str_arr = keys(raw_correlators[Ptot_str])
-        if (p₁_str = "p_nonlocal1_"*join(p₁, ",")) in p_nonlocal_str_arr
-            p_nonlocal1_str = p₁_str
-        elseif (p₂_str = "p_nonlocal1_"*join(p₂, ",")) in p_nonlocal_str_arr
-            p_nonlocal1_str = p₂_str
+        if (p_str = "p_nonlocal1_"*join(p₃, ",")) in p_nonlocal_str_arr
+            p_nonlocal1_str = p_str
+        elseif (p_str = "p_nonlocal1_"*join(p₄, ",")) in p_nonlocal_str_arr
+            p_nonlocal1_str = p_str
             
-            # Swap Γ₃<->Γ₄
+            # Swap Γ₃<->Γ₄ and flip sign (since dad operator is I=0)
             permute!(Γ_idx_permutation, [1, 2, 4, 3])
+            sign *= -1
         else
             throw(ArgumentError("none of the chose momenta for the nonlocal interpolator " *
                                 "is in the correlator."))
@@ -292,12 +301,9 @@ function get_dad_DD_local_nonlocal_mixed_corr(O_sink, O_src, raw_corr_dict)
         # Flavour content
         @assert O_sink["flavour"] in [:ccūd̄, :ccd̄ū] "Flavour of sink operator not valid."
         @assert O_src["flavour"] in [:ūcd̄c, :d̄cūc] "Flavour of source operator not valid."
-        if O_sink["flavour"] == :ccd̄ū
+        if (O_sink["flavour"] == :ccd̄ū) ⊻ (O_src["flavour"] == :d̄cūc)
+            # Swap u<->d in dad operator which flips sign since it is I=0
             sign *= -1
-        end
-        if O_src["flavour"] == :d̄cūc
-            # Swap Γ₃<->Γ₄
-            permute!(Γ_idx_permutation, [1, 2, 4, 3])
         end
 
         # Indices for gamma matrices
@@ -319,13 +325,14 @@ function get_dad_DD_local_nonlocal_mixed_corr(O_sink, O_src, raw_corr_dict)
 
         # Check if p₁ or p₂ is p_nonlocal1 in raw correlator
         p_nonlocal_str_arr = keys(raw_correlators[Ptot_str])
-        if (p₁_str = "p_nonlocal1_"*join(p₁, ",")) in p_nonlocal_str_arr
-            p_nonlocal1_str = p₁_str
-        elseif (p₂_str = "p_nonlocal1_"*join(p₂, ",")) in p_nonlocal_str_arr
-            p_nonlocal1_str = p₂_str
+        if (p_str = "p_nonlocal1_"*join(p₁, ",")) in p_nonlocal_str_arr
+            p_nonlocal1_str = p_str
+        elseif (p_str = "p_nonlocal1_"*join(p₂, ",")) in p_nonlocal_str_arr
+            p_nonlocal1_str = p_str
             
-            # Swap Γ₁<->Γ₂
+            # Swap Γ₁<->Γ₂ and flip sign (since dad operator is I=0)
             permute!(Γ_idx_permutation, [2, 1, 3, 4])
+            sign *= -1
         else
             throw(ArgumentError("none of the chose momenta for the nonlocal interpolator " *
                                 "is in the correlator."))
@@ -334,12 +341,9 @@ function get_dad_DD_local_nonlocal_mixed_corr(O_sink, O_src, raw_corr_dict)
         # Flavour
         @assert O_sink["flavour"] in [:ūcd̄c, :d̄cūc] "Flavour of sink operator not valid."
         @assert O_src["flavour"] in [:ccūd̄, :ccd̄ū] "Flavour of source operator not valid."
-        if O_src["flavour"] == :ccd̄ū
+        if (O_sink["flavour"] == :d̄cūc) ⊻ (O_src["flavour"] == :ccd̄ū)
+            # Swap u<->d in dad operator which flips sign since it is I=0
             sign *= -1
-        end
-        if (O_sink["flavour"] != O_src["flavour"])
-            # Swap Γ₃<->Γ₄ (swap u<->d in the local operator)
-            permute!(Γ_idx_permutation, [2, 1, 3, 4])
         end
 
         # Indices for gamma matrices
@@ -353,8 +357,8 @@ function get_dad_DD_local_nonlocal_mixed_corr(O_sink, O_src, raw_corr_dict)
     
     permute!(Γ_idx, Γ_idx_permutation)
     
-    # Extract relevant part from raw correlators
-    return raw_correlators[Ptot_str][p_nonlocal1_str][op_order][:, Γ_idx...]
+    # Extract relevant part from raw correlators (and multiply with sign)
+    return sign * raw_correlators[Ptot_str][p_nonlocal1_str][op_order][:, Γ_idx...]
 end
 
 @doc raw"""

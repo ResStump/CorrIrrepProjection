@@ -1,7 +1,7 @@
 # %%########################################################################################
 # dad-DD.jl
 #
-# Project correlators from DD and diquark-antidiquark operators to their irreducible
+# Project correlators from diquark-antidiquark and DD operators to their irreducible
 # representations.
 #
 # Usage:
@@ -98,7 +98,9 @@ function get_raw_corr_dict(n_cnfg, t₀)
                  "dad-DD_local", "dad-DD_local-nonlocal"]
     
     # Remove types that are skipped
-    types_arr = filter(type -> type ∉ ext_corr_types, types_arr)
+    if length(skipped_entries) != 0
+        types_arr = filter(type -> type ∉ ext_corr_types, types_arr)
+    end
 
     for type in types_arr
         raw_corr_dict[type] = read_raw_corr(type, n_cnfg, t₀)
