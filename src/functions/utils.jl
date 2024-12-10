@@ -4,7 +4,7 @@
 Multiply each operator in `O_arr` with the scalar `λ` and return the new array `O_arr_new`.
 """
 function scalar_mul(O_arr, λ)
-    O_arr_new = copy(O_arr)
+    O_arr_new = deepcopy(O_arr)
     map(O -> O["N"] *= λ, O_arr_new)
     return O_arr_new
 end
