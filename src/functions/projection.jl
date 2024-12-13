@@ -408,20 +408,56 @@ function get_tetraquark_corr(O_sink, O_src, raw_corr_dict)
 end
 
 @doc raw"""
-    project_tetraquark_corr(O_sink_arr, O_src_arr, raw_corr_dict) -> Cₜ
+    project_tetraquark_corr(O_sink_arr, O_src_arr, raw_corr_dict) -> Cₜ_fb
 
-Compute the correlator Cₜ which is the sum of correlators <O\_sink(t) O\_src(0)^†> for all
-combinations of operators (O\_sink, O\_src) from the arrays of operators `O_sink_arr` and
-`O_src_arr`. The Dict `raw_corr_dict` is expected to contain the raw correlators
+Compute the correlator `Cₜ_fb` which is the sum of correlators <O\_sink(t) O\_src(0)^†> for
+all combinations of operators (O\_sink, O\_src) from the arrays of operators `O_sink_arr`
+and `O_src_arr`. The correlator `Cₜ_fb` is in  forward/backward shape which means
+it has the shape (Nₜ//2+1, 2) where the first column contains the forward correlator and the
+second column the backward correlator.
+The Dict `raw_corr_dict` is expected to contain the raw correlators
 (key "Correlators") and the spin structure of it (key "Spin Structure).
 """
 function project_tetraquark_corr(O_sink_arr, O_src_arr, raw_corr_dict)
-    # Create Correlator
-    Cₜ = zeros(ComplexF64, parms.Nₜ)
+    Nₜ = parms.Nₜ
 
-    for (O_sink, O_src) in Iterators.product(O_sink_arr, O_src_arr)
-        Cₜ .+= get_tetraquark_corr(O_sink, O_src, raw_corr_dict)
+    # Create Correlator (forward and backward shape)
+    Cₜ_fb = zeros(ComplexF64, Nₜ÷2+1, 2)
+
+    # Indices for forward and backward correlator
+    fwd_indices = 1:Nₜ÷2+1
+    bwd_indices = mod1.(Nₜ+1:-1:Nₜ÷2+1, Nₜ)
+
+    # Get time reversal factors of sink/src operators
+    trev_sink_arr = map(d -> d["trev"], O_sink_arr)
+    trev_src_arr = map(d -> d["trev"], O_src_arr)
+
+    # If time reversal factors are equal compute full correlator at once
+    if allequal(trev_sink_arr) && allequal(trev_src_arr)
+        Cₜ = zeros(ComplexF64, Nₜ)
+
+        for (O_sink, O_src) in Iterators.product(O_sink_arr, O_src_arr)
+            Cₜ .+= get_tetraquark_corr(O_sink, O_src, raw_corr_dict)
+        end
+
+        # Forward correlator
+        Cₜ_fb[:, 1] = Cₜ[fwd_indices]
+
+        # Backward correlator (multiply with time reversal factors)
+        sign = trev_sink_arr[1]*trev_src_arr[1]
+        Cₜ_fb[:, 2] = sign * Cₜ[bwd_indices]
+    else
+        for (O_sink, O_src) in Iterators.product(O_sink_arr, O_src_arr)
+            Cₜ = get_tetraquark_corr(O_sink, O_src, raw_corr_dict)
+
+            # Forward correlator
+            Cₜ_fb[:, 1] += Cₜ[fwd_indices]
+
+            # Backward correlator (multiply with time reversal factors)
+            sign = O_sink["trev"]*O_src["trev"]
+            Cₜ_fb[:, 2] += sign * Cₜ[bwd_indices]
+        end
     end
 
-    return Cₜ
+    return Cₜ_fb
 end

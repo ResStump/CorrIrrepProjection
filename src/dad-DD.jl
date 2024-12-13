@@ -47,16 +47,28 @@ include("operators/DD_operators.jl")
 include("operators/dad_operators.jl")
 
 # Operator array
-O_arr(i) = [DDstarₛᵢ_A₁⁺0_T₁⁺_I0_nonlocal(i),
+O_i_arr = [[DDstarₛᵢ_A₁⁺0_T₁⁺_I0_nonlocal(i),
             DDstarₛᵢ_A₁⁺1_T₁⁺_I0_nonlocal(i),
-            DDstarₛᵢ_A₁⁺p0_T₁⁺_I0_local(i),
-            dadᵢ_A₁⁺p0_T₁⁺_I0_local(i)]
+            DDstarₛᵢ_E⁺1_T₁⁺_I0_nonlocal(i),
+            DDstarₛᵢ_A₁⁺2_T₁⁺_I0_nonlocal(i),
+            DDstarₛᵢ_J1⁺2_T₁⁺_I0_nonlocal(i),
+            DDstarₛᵢ_J3⁺2_T₁⁺_I0_nonlocal(i),
+            DstarDstarₛᵢ_A₁⁺0_S1_T₁⁺_I0_nonlocal(i),
+            DstarDstarₛᵢ_A₁⁺1_S1_T₁⁺_I0_nonlocal(i),
+            DstarDstarₛᵢ_E⁺1_S1_T₁⁺_I0_nonlocal(i),
+            DDstarₛᵢ_A₁⁺_T₁⁺_I0_local(i),
+            dadᵢ_A₁⁺_T₁⁺_I0_local(i),
+            DstarDstarₛᵢ_A₁⁺_S1_T₁⁺_I0_local(i)]
+            for i in 1:3]
 
-N_op = length(O_arr(1))
+N_op = length(O_i_arr[1])
 
 # Operator labels
-operator_labels = ["DD*s nonlocal A1+(0)", "DD*s nonlocal A1+(1)", "DD*s local A1+",
-                   "dad local A1+"]
+operator_labels = ["DD*s nonlocal A1+(0)", "DD*s nonlocal A1+(1)", "DD*s nonlocal E+(1)",
+                   "DD*s nonlocal A1+(2)", "DD*s nonlocal J1+(2)", "DD*s nonlocal J3+(2)",
+                   "D*D*s nonlocal A1+(0),1", "D*D*s nonlocal A1+(1),1",
+                   "D*D*s nonlocal E+(1),1",
+                   "DD*s local A1+", "dad local A1+", "D*D*s local A1+"]
 
 
 # Skipped correlator matrix entries
@@ -126,24 +138,24 @@ dimension_labels = ["config", "tsrc", "fwd/bwd", "op_src", "op_snk", "t"]
 #############
 
 function compute_corr_matrix_entries(raw_corr_dict)
-    # Allocate corr matrix with zeros
-    Cₜ = zeros(ComplexF64, CIP.parms.Nₜ, N_op, N_op)
+    # Allocate corr matrix with zeros (forward and backward shape)
+    Cₜ_fb = zeros(ComplexF64, CIP.parms.Nₜ÷2+1, N_op, N_op, 2)
 
     # Loop over spin index
     for i in 1:3
         # Loop over all operators
-        for (i_O_sink, O_sink) in enumerate(O_arr(i))
-            for (i_O_src, O_src) in enumerate(O_arr(i))
+        for (i_O_sink, O_sink) in enumerate(O_i_arr[i])
+            for (i_O_src, O_src) in enumerate(O_i_arr[i])
                 # Check if this entrie should be computed
                 if !([i_O_sink, i_O_src] in skipped_entries)
-                    Cₜ[:, i_O_sink, i_O_src] .+= 
+                    Cₜ_fb[:, i_O_sink, i_O_src, :] .+= 
                         1/3*CIP.project_tetraquark_corr(O_sink, O_src, raw_corr_dict)
                 end
             end
         end
     end
     
-    return Cₜ
+    return Cₜ_fb
 end
 
 function main()
@@ -162,20 +174,12 @@ function main()
 
                 # Compute correlator matrix
                 raw_corr_dict = get_raw_corr_dict(n_cnfg, t₀)
-                Cₜ = compute_corr_matrix_entries(raw_corr_dict) 
+                Cₜ_fb = compute_corr_matrix_entries(raw_corr_dict)
 
-                # Bring correlator in forward/backward shape and store it
-                #########################################################
-                Nₜ = CIP.parms.Nₜ
-
-                # Forward correlator
-                Cₜ_fwd = Cₜ[1:Nₜ÷2+1, :, :]
-                corr_matrix[:, :, :, 1, i_src, i_cnfg] = Cₜ_fwd
-
-                # Backward correlator (reversed time order and operator indices permuted)
-                bwd_time_indices = [1, (Nₜ:-1:Nₜ÷2+1)...]
-                Cₜ_bwd = Cₜ[bwd_time_indices, :, :]
-                corr_matrix[:, :, :, 2, i_src, i_cnfg] = permutedims(Cₜ_bwd, [1, 3, 2])
+                # Store correlator matrix entries (transpose backward correlator)
+                corr_matrix[:, :, :, 1, i_src, i_cnfg] = Cₜ_fb[:, :, :, 1]
+                corr_matrix[:, :, :, 2, i_src, i_cnfg] = 
+                    permutedims(Cₜ_fb[:, :, :, 2], [1, 3, 2])
             end
         end
         println("\n")
