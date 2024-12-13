@@ -1,0 +1,42 @@
+["File base names"]
+DD_local                = "correlators_DD_local_B450r000_32modes"
+DD_nonlocal             = "correlators_DD_nonlocal_B450r000_32modes"
+DD_mixed                = "correlators_DD_mixed_B450r000_32modes"
+dad_local               = "correlators_dad_local_B450r000_32modes"
+dad-DD_local            = "correlators_dad-DD_local_B450r000_32modes"
+dad-DD_local-nonlocal   = "correlators_dad-DD_local-nonlocal_mixed_B450r000_32modes"
+corr_result             = "correlator_dad-DD_B450r000_32modes.hdf5"
+
+["Directories and Files"]
+raw_corr_DD_local_dir               = "run_dad-DD/raw_corr"
+raw_corr_DD_nonlocal_dir            = "run_dad-DD/raw_corr"
+raw_corr_DD_mixed_dir               = "run_dad-DD/raw_corr"
+raw_corr_dad_local_dir              = "run_dad-DD/raw_corr"
+raw_corr_dad-DD_local_dir           = "run_dad-DD/raw_corr"
+raw_corr_dad-DD_local-nonlocal_dir  = "run_dad-DD/raw_corr"
+tsrc_list   = "tsrc_list"
+result_dir = "results"
+
+["Geometry"]
+N_t     = 64
+
+["Configurations"]
+first   = 1
+last    = 1612
+step    = 1
+
+["Sources"]
+N_src           = 8
+src_separation  = 8
+
+["Corr Matrix Entries"]
+skip_operators = [1, 2]
+# skip_operators = []
+
+["Corr Matrix Entries"."external corr"]
+types = ["DD_nonlocal"]
+file = "B450r000_32modes_DD.hdf5"
+group = "/c2_DD/I0/P000/T1+"
+operators = [1, 2]
+
+["Various"]
