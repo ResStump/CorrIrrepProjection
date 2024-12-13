@@ -72,13 +72,16 @@ operator_labels = ["DD*s nonlocal A1+(0)", "DD*s nonlocal A1+(1)", "DD*s nonloca
 
 
 # Skipped correlator matrix entries
-skipped_entries = CIP.parms_toml["Corr Matrix Entries"]["skip_entries"]
+skip_operators = CIP.parms_toml["Corr Matrix Entries"]["skip_operators"]
+skipped_entries = [[i, j] for (i, j) in Iterators.product(skip_operators, skip_operators)]
 
 # Correlator matrix entries from external file (if they are already computed)
 ext_corr_types = CIP.parms_toml["Corr Matrix Entries"]["external corr"]["types"]
 ext_corr_file = CIP.parms_toml["Corr Matrix Entries"]["external corr"]["file"]
 ext_corr_group = CIP.parms_toml["Corr Matrix Entries"]["external corr"]["group"]
-ext_corr_entries = CIP.parms_toml["Corr Matrix Entries"]["external corr"]["entries"]
+ext_corr_operators = CIP.parms_toml["Corr Matrix Entries"]["external corr"]["operators"]
+ext_corr_entries = [[i, j]
+                    for (i, j) in Iterators.product(ext_corr_operators, ext_corr_operators)]
 
 
 
