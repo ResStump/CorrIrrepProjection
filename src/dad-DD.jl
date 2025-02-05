@@ -129,7 +129,8 @@ end
 # Allocate Correlator Arrays
 ############################
 
-corr_matrix_size = CIP.parms.Nₜ÷2+1, N_op, N_op, 2, CIP.parms.N_src, CIP.parms.N_cnfg
+corr_matrix_size = (CIP.parms.nₜ, N_op, N_op, CIP.parms.N_directions, CIP.parms.N_src,
+                    CIP.parms.N_cnfg)
 corr_matrix = Array{ComplexF64}(undef, corr_matrix_size)
 
 # Dimension labels (reversed order in julia)
@@ -142,7 +143,7 @@ dimension_labels = ["config", "tsrc", "fwd/bwd", "op_src", "op_snk", "t"]
 
 function compute_corr_matrix_entries(raw_corr_dict)
     # Allocate corr matrix with zeros (forward and backward shape)
-    Cₜ_fb = zeros(ComplexF64, CIP.parms.Nₜ÷2+1, N_op, N_op, 2)
+    Cₜ_fb = zeros(ComplexF64, CIP.parms.nₜ, N_op, N_op, CIP.parms.N_directions)
 
     # Loop over spin index
     for i in 1:3

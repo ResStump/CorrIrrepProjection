@@ -14,6 +14,11 @@ struct Parms
     # Lattice size in time
     Nₜ::Int
 
+    # Correlator shape
+    direction::String
+    nₜ::Int
+    N_directions::Int
+
     # Number of configurations and sources
     N_cnfg::Int
     N_src::Int
@@ -58,6 +63,21 @@ function read_parameters()
     # Lattice size in time
     Nₜ = parms_toml["Geometry"]["N_t"]
 
+    # Shape of correlator
+    direction = parms_toml["Correlator shape"]["direction"]
+    if direction in ["forward", "backward"]
+        N_directions = 1
+        nₜ = parms_toml["Correlator shape"]["n_timeslices"]
+    elseif direction in ["forward/backward"]
+        N_directions = 2
+        nₜ = parms_toml["Correlator shape"]["n_timeslices"]
+    elseif direction in ["full"]
+        N_directions = 2
+        nₜ = Nₜ÷2+1
+    else
+        throw(ArgumentError("Invalid direction: $direction"))
+    end
+
     # Set `cnfg_indices`
     first_cnfg = parms_toml["Configurations"]["first"]
     step_cnfg = parms_toml["Configurations"]["step"]
@@ -81,7 +101,7 @@ function read_parameters()
 
     # Store all parameters
     global parms = Parms(parms_toml_string, cnfg_indices,
-                         tsrc_arr, Nₜ, N_cnfg, N_src)
+                         tsrc_arr, Nₜ, direction, nₜ, N_directions, N_cnfg, N_src)
     
     return
 end

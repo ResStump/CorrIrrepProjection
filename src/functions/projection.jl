@@ -63,7 +63,11 @@ function get_DD_nonlocal_corr(O_sink, O_src, raw_corr_dict)
     permute!(Γ_idx, Γ_idx_permutation)
 
     # Extract relevant part from raw correlators
-    return raw_correlators[Ptot_str][psink1_str][psrc1_str][flavour][:, Γ_idx...]
+    if parms.direction == "full"
+        return raw_correlators[Ptot_str][psink1_str][psrc1_str][flavour][:, Γ_idx...]
+    else
+        return raw_correlators[Ptot_str][psink1_str][psrc1_str][flavour][:, :, Γ_idx...]
+    end
 end
 
 function get_DD_local_corr(O_sink, O_src, raw_corr_dict)
@@ -95,7 +99,11 @@ function get_DD_local_corr(O_sink, O_src, raw_corr_dict)
     permute!(Γ_idx, Γ_idx_permutation)
     
     # Extract relevant part from raw correlators
-    return raw_correlators[p_str][:, Γ_idx...]
+    if parms.direction == "full"
+        return raw_correlators[p_str][:, Γ_idx...]
+    else
+        return raw_correlators[p_str][:, :, Γ_idx...]
+    end
 end
 
 function get_DD_mixed_corr(O_sink, O_src, raw_corr_dict)
@@ -165,7 +173,11 @@ function get_DD_mixed_corr(O_sink, O_src, raw_corr_dict)
     permute!(Γ_idx, Γ_idx_permutation)
     
     # Extract relevant part from raw correlators
-    return raw_correlators[Ptot_str][p_nonlocal1_str][op_order][:, Γ_idx...]
+    if parms.direction == "full"
+        return raw_correlators[Ptot_str][p_nonlocal1_str][op_order][:, Γ_idx...]
+    else
+        return raw_correlators[Ptot_str][p_nonlocal1_str][op_order][:, :, Γ_idx...]
+    end
 end
 
 function get_dad_local_corr(O_sink, O_src, raw_corr_dict)
@@ -197,7 +209,11 @@ function get_dad_local_corr(O_sink, O_src, raw_corr_dict)
     ]
     
     # Extract relevant part from raw correlators (and multiply with sign)
-    return sign * raw_correlators[p_str][:, Γ_idx...]
+    if parms.direction == "full"
+        return sign * raw_correlators[p_str][:, Γ_idx...]
+    else
+        return sign * raw_correlators[p_str][:, :, Γ_idx...]
+    end
 end
 
 function get_dad_DD_local_mixed_corr(O_sink, O_src, raw_corr_dict)
@@ -262,7 +278,11 @@ function get_dad_DD_local_mixed_corr(O_sink, O_src, raw_corr_dict)
     permute!(Γ_idx, Γ_idx_permutation)
 
     # Extract relevant part from raw correlators (and multiply with sign)
-    return sign * raw_correlators[p_str][op_order][:, Γ_idx...]
+    if parms.direction == "full"
+        return sign * raw_correlators[p_str][op_order][:, Γ_idx...]
+    else
+        return sign * raw_correlators[p_str][op_order][:, :, Γ_idx...]
+    end
 end
 
 function get_dad_DD_local_nonlocal_mixed_corr(O_sink, O_src, raw_corr_dict)
@@ -358,7 +378,11 @@ function get_dad_DD_local_nonlocal_mixed_corr(O_sink, O_src, raw_corr_dict)
     permute!(Γ_idx, Γ_idx_permutation)
     
     # Extract relevant part from raw correlators (and multiply with sign)
-    return sign * raw_correlators[Ptot_str][p_nonlocal1_str][op_order][:, Γ_idx...]
+    if parms.direction == "full"
+        return sign * raw_correlators[Ptot_str][p_nonlocal1_str][op_order][:, Γ_idx...]
+    else
+        return sign * raw_correlators[Ptot_str][p_nonlocal1_str][op_order][:, :, Γ_idx...]
+    end
 end
 
 @doc raw"""
@@ -413,49 +437,43 @@ end
 Compute the correlator `Cₜ_fb` which is the sum of correlators <O\_sink(t) O\_src(0)^†> for
 all combinations of operators (O\_sink, O\_src) from the arrays of operators `O_sink_arr`
 and `O_src_arr`. The correlator `Cₜ_fb` is in  forward/backward shape which means
-it has the shape (Nₜ//2+1, 2) where the first column contains the forward correlator and the
-second column the backward correlator.
+it has the shape (parms.nₜ, parms.N_directions) where the first column contains the forward
+correlator and the second column the backward correlator.
 The Dict `raw_corr_dict` is expected to contain the raw correlators
 (key "Correlators") and the spin structure of it (key "Spin Structure).
 """
 function project_tetraquark_corr(O_sink_arr, O_src_arr, raw_corr_dict)
     Nₜ = parms.Nₜ
+    nₜ = parms.nₜ
 
     # Create Correlator (forward and backward shape)
-    Cₜ_fb = zeros(ComplexF64, Nₜ÷2+1, 2)
+    Cₜ_fb = zeros(ComplexF64, nₜ, parms.N_directions)
 
     # Indices for forward and backward correlator
-    fwd_indices = 1:Nₜ÷2+1
-    bwd_indices = mod1.(Nₜ+1:-1:Nₜ÷2+1, Nₜ)
+    if parms.direction == "full"
+        fwd_indices = 1:nₜ
+        bwd_indices = mod1.(Nₜ+1:-1:nₜ, Nₜ)
+    end
 
-    # Get time reversal factors of sink/src operators
-    trev_sink_arr = map(d -> d["trev"], O_sink_arr)
-    trev_src_arr = map(d -> d["trev"], O_src_arr)
+    # Compute correlator
+    for (O_sink, O_src) in Iterators.product(O_sink_arr, O_src_arr)
+        Cₜ = get_tetraquark_corr(O_sink, O_src, raw_corr_dict)
 
-    # If time reversal factors are equal compute full correlator at once
-    if allequal(trev_sink_arr) && allequal(trev_src_arr)
-        Cₜ = zeros(ComplexF64, Nₜ)
+        # Time reversal factors
+        sign = O_sink["trev"]*O_src["trev"]
 
-        for (O_sink, O_src) in Iterators.product(O_sink_arr, O_src_arr)
-            Cₜ .+= get_tetraquark_corr(O_sink, O_src, raw_corr_dict)
-        end
-
-        # Forward correlator
-        Cₜ_fb[:, 1] = Cₜ[fwd_indices]
-
-        # Backward correlator (multiply with time reversal factors)
-        sign = trev_sink_arr[1]*trev_src_arr[1]
-        Cₜ_fb[:, 2] = sign * Cₜ[bwd_indices]
-    else
-        for (O_sink, O_src) in Iterators.product(O_sink_arr, O_src_arr)
-            Cₜ = get_tetraquark_corr(O_sink, O_src, raw_corr_dict)
-
-            # Forward correlator
-            Cₜ_fb[:, 1] += Cₜ[fwd_indices]
-
-            # Backward correlator (multiply with time reversal factors)
-            sign = O_sink["trev"]*O_src["trev"]
-            Cₜ_fb[:, 2] += sign * Cₜ[bwd_indices]
+        if parms.direction == "forward"
+            Cₜ_fb .+= Cₜ
+        elseif parms.direction == "backward"
+            Cₜ_fb .+= sign .* reverse!(Cₜ)
+        elseif parms.direction == "forward/backward"
+            Cₜ_fb[:, 1] .+= @view Cₜ[:, 1]
+            Cₜ_fb[:, 2] .+= sign .* reverse!(@view Cₜ[:, 2])
+        elseif parms.direction == "full"
+            Cₜ_fb[:, 1] .+= @view Cₜ[fwd_indices]
+            Cₜ_fb[:, 2] .+= sign .* @view Cₜ[bwd_indices]
+        else
+            throw(ArgumentError("Invalid direction: $(parms.direction)"))
         end
     end
 
