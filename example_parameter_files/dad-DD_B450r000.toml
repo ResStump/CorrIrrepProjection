@@ -20,6 +20,10 @@ result_dir = "results"
 ["Geometry"]
 N_t     = 64
 
+["Correlator shape"]
+direction       = "full"    # "forward", "backward", "forward/backward" or "full"
+n_timeslices    = 32
+
 ["Configurations"]
 first   = 1
 last    = 1612
